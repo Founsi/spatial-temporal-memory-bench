@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Spatial-Temporal Memory Evaluation Sample",
+  "description": "Schema for a single evaluation sample in the spatial-temporal memory benchmark",
+  "type": "object",
+  "required": ["id", "version", "visual_sequence", "qa_pairs", "metadata"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this evaluation sample"
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "enum": ["0.1.0"]
+    },
+    "visual_sequence": {
+      "type": "object",
+      "description": "Ordered set of visual frames with temporal context",
+      "required": ["frames"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Origin dataset or capture method (e.g. 'wyze_camera', 'ego4d', 'robotics_sim')"
+        },
+        "environment": {
+          "type": "string",
+          "description": "Description of the environment (e.g. 'kitchen', 'living_room', 'warehouse')"
+        },
+        "duration_seconds": {
+          "type": "number",
+          "description": "Total time span covered by the sequence"
+        },
+        "frames": {
+          "type": "array",
+          "description": "Ordered list of visual frames",
+          "items": {
+            "type": "object",
+            "required": ["frame_id", "timestamp", "image_path"],
+            "properties": {
+              "frame_id": {
+                "type": "string",
+                "description": "Unique frame identifier within this sequence"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO 8601 timestamp of when this frame was captured"
+              },
+              "image_path": {
+                "type": "string",
+                "description": "Relative path to the image file"
+              },
+              "objects": {
+                "type": "array",
+                "description": "Objects annotated in this frame",
+                "items": {
+                  "type": "object",
+                  "required": ["object_id", "label"],
+                  "properties": {
+                    "object_id": {
+                      "type": "string",
+                      "description": "Persistent object ID across frames (for entity resolution)"
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "Human-readable object label (e.g. 'red_mug', 'backpack')"
+                    },
+                    "bounding_box": {
+                      "type": "object",
+                      "description": "Bounding box in normalized coordinates [0, 1]",
+                      "properties": {
+                        "x_min": { "type": "number" },
+                        "y_min": { "type": "number" },
+                        "x_max": { "type": "number" },
+                        "y_max": { "type": "number" }
+                      }
+                    },
+                    "state": {
+                      "type": "string",
+                      "description": "Current state of the object (e.g. 'on_table', 'in_hand', 'open', 'closed')"
+                    },
+                    "spatial_description": {
+                      "type": "string",
+                      "description": "Natural language description of the object's position"
+                    }
+                  }
+                }
+              },
+              "scene_description": {
+                "type": "string",
+                "description": "Natural language description of the full scene at this frame"
+              }
+            }
+          }
+        }
+      }
+    },
+    "qa_pairs": {
+      "type": "array",
+      "description": "Evaluation questions and ground-truth answers",
+      "items": {
+        "type": "object",
+        "required": ["question_id", "question", "answer", "dimensions"],
+        "properties": {
+          "question_id": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string",
+            "description": "Natural language question testing memory retrieval"
+          },
+          "answer": {
+            "type": "string",
+            "description": "Ground-truth answer"
+          },
+          "answer_type": {
+            "type": "string",
+            "enum": ["exact", "fuzzy", "multiple_choice", "open_ended"],
+            "description": "How the answer should be evaluated"
+          },
+          "dimensions": {
+            "type": "array",
+            "description": "Which evaluation dimensions this question tests",
+            "items": {
+              "type": "string",
+              "enum": [
+                "spatial_recall",
+                "temporal_tracking",
+                "entity_resolution",
+                "cross_modal_fusion",
+                "hot_memory",
+                "cold_memory",
+                "contextual_retrieval"
+              ]
+            }
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": ["easy", "medium", "hard"],
+            "description": "Difficulty level of this question"
+          },
+          "relevant_frames": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Frame IDs needed to answer this question"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["source_dataset", "annotator"],
+      "properties": {
+        "source_dataset": {
+          "type": "string",
+          "description": "Original dataset this sample was derived from"
+        },
+        "annotator": {
+          "type": "string",
+          "description": "Who created the annotations and QA pairs"
+        },
+        "annotation_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

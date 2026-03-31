@@ -1,0 +1,9 @@
+# Core evaluation
+# No heavy dependencies required for basic evaluation
+
+# Optional: for strict JSON schema validation
+# jsonschema>=4.0.0
+
+# Optional: for semantic similarity scoring
+# sentence-transformers>=2.0.0
+# numpy>=1.24.0

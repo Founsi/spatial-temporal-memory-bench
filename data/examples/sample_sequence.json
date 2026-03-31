@@ -1,0 +1,114 @@
+{
+  "id": "sample_001_kitchen_morning",
+  "version": "0.1.0",
+  "visual_sequence": {
+    "source": "simulated",
+    "environment": "kitchen",
+    "duration_seconds": 7200,
+    "frames": [
+      {
+        "frame_id": "f001",
+        "timestamp": "2026-03-15T08:00:00Z",
+        "image_path": "images/kitchen_0800.jpg",
+        "objects": [
+          {
+            "object_id": "obj_mug_red",
+            "label": "red_mug",
+            "bounding_box": { "x_min": 0.45, "y_min": 0.60, "x_max": 0.52, "y_max": 0.72 },
+            "state": "on_counter",
+            "spatial_description": "Red mug sitting on the kitchen counter near the coffee maker"
+          },
+          {
+            "object_id": "obj_keys_01",
+            "label": "car_keys",
+            "bounding_box": { "x_min": 0.70, "y_min": 0.55, "x_max": 0.75, "y_max": 0.60 },
+            "state": "on_counter",
+            "spatial_description": "Car keys on the counter next to the fruit bowl"
+          }
+        ],
+        "scene_description": "Morning kitchen scene. Counter has a red mug near the coffee maker and car keys next to the fruit bowl. Overhead light is on."
+      },
+      {
+        "frame_id": "f002",
+        "timestamp": "2026-03-15T08:30:00Z",
+        "image_path": "images/kitchen_0830.jpg",
+        "objects": [
+          {
+            "object_id": "obj_mug_red",
+            "label": "red_mug",
+            "bounding_box": { "x_min": 0.20, "y_min": 0.40, "x_max": 0.27, "y_max": 0.52 },
+            "state": "on_table",
+            "spatial_description": "Red mug has been moved to the kitchen table"
+          },
+          {
+            "object_id": "obj_keys_01",
+            "label": "car_keys",
+            "bounding_box": { "x_min": 0.70, "y_min": 0.55, "x_max": 0.75, "y_max": 0.60 },
+            "state": "on_counter",
+            "spatial_description": "Car keys still on the counter next to the fruit bowl"
+          }
+        ],
+        "scene_description": "Kitchen 30 minutes later. Red mug has moved from counter to kitchen table. Keys remain on counter. Coffee maker is now off."
+      },
+      {
+        "frame_id": "f003",
+        "timestamp": "2026-03-15T10:00:00Z",
+        "image_path": "images/kitchen_1000.jpg",
+        "objects": [
+          {
+            "object_id": "obj_mug_red",
+            "label": "red_mug",
+            "bounding_box": { "x_min": 0.80, "y_min": 0.70, "x_max": 0.87, "y_max": 0.82 },
+            "state": "in_sink",
+            "spatial_description": "Red mug is now in the sink"
+          }
+        ],
+        "scene_description": "Kitchen at 10am. Red mug is in the sink. Car keys are no longer visible — likely taken. Kitchen is tidier."
+      }
+    ]
+  },
+  "qa_pairs": [
+    {
+      "question_id": "q001",
+      "question": "Where was the red mug at 8am?",
+      "answer": "On the kitchen counter near the coffee maker",
+      "answer_type": "fuzzy",
+      "dimensions": ["spatial_recall"],
+      "difficulty": "easy",
+      "relevant_frames": ["f001"]
+    },
+    {
+      "question_id": "q002",
+      "question": "Did the red mug move between 8am and 10am?",
+      "answer": "Yes, it moved from the counter to the table and then to the sink",
+      "answer_type": "fuzzy",
+      "dimensions": ["temporal_tracking", "spatial_recall"],
+      "difficulty": "medium",
+      "relevant_frames": ["f001", "f002", "f003"]
+    },
+    {
+      "question_id": "q003",
+      "question": "When did the car keys disappear from the scene?",
+      "answer": "Between 8:30am and 10:00am",
+      "answer_type": "fuzzy",
+      "dimensions": ["temporal_tracking", "entity_resolution"],
+      "difficulty": "medium",
+      "relevant_frames": ["f002", "f003"]
+    },
+    {
+      "question_id": "q004",
+      "question": "What changed in the kitchen between the first and last frame?",
+      "answer": "The red mug moved from the counter to the sink, the car keys were removed, and the kitchen became tidier",
+      "answer_type": "open_ended",
+      "dimensions": ["temporal_tracking", "contextual_retrieval"],
+      "difficulty": "hard",
+      "relevant_frames": ["f001", "f003"]
+    }
+  ],
+  "metadata": {
+    "source_dataset": "simulated_example",
+    "annotator": "spatial-temporal-memory-bench team",
+    "annotation_date": "2026-03-31",
+    "notes": "Example sample for demonstration. Replace with real visual data."
+  }
+}
