@@ -7,3 +7,23 @@
 # Optional: for semantic similarity scoring
 # sentence-transformers>=2.0.0
 # numpy>=1.24.0
+
+# =============================================================
+# Curation Pipeline Dependencies
+# =============================================================
+# Install what you need based on your pipeline configuration:
+
+# Video frame extraction (required for --source video)
+# pip install opencv-python
+# opencv-python>=4.8.0
+
+# Vision analysis with OpenAI (for --vision-provider openai)
+# pip install openai
+# openai>=1.0.0
+
+# Vision analysis / QA generation with Anthropic (for --vision-provider anthropic)
+# pip install anthropic
+# anthropic>=0.40.0
+
+# All pipeline dependencies at once:
+# pip install opencv-python openai anthropic

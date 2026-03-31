@@ -168,6 +168,57 @@
           "type": "string"
         }
       }
+    },
+    "review": {
+      "type": "object",
+      "description": "Human review status and audit trail",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pending", "in_review", "approved", "rejected", "needs_revision"],
+          "description": "Overall review status of this sample"
+        },
+        "reviewer": {
+          "type": "string",
+          "description": "Name or ID of the human reviewer"
+        },
+        "review_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "frame_reviews": {
+          "type": "object",
+          "description": "Per-frame review decisions, keyed by frame_id",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["approved", "edited", "flagged"]
+              },
+              "notes": { "type": "string" }
+            }
+          }
+        },
+        "qa_reviews": {
+          "type": "object",
+          "description": "Per-QA-pair review decisions, keyed by question_id",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["approved", "edited", "rejected", "flagged"]
+              },
+              "notes": { "type": "string" }
+            }
+          }
+        },
+        "notes": {
+          "type": "string",
+          "description": "Overall reviewer notes"
+        }
+      }
     }
   }
 }

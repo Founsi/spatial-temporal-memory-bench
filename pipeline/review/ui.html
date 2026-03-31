@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Bench — Annotation Review</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242836;
+    --border: #2e3348;
+    --text: #e1e4ed;
+    --text-dim: #8b90a5;
+    --accent: #6c8cff;
+    --green: #4ade80;
+    --yellow: #facc15;
+    --red: #f87171;
+    --orange: #fb923c;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+  }
+  header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 16px 24px; display: flex; align-items: center; gap: 16px;
+  }
+  header h1 { font-size: 18px; font-weight: 600; }
+  header .badge {
+    font-size: 12px; padding: 2px 10px; border-radius: 12px;
+    background: var(--accent); color: white;
+  }
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+  /* Sample list */
+  .sample-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .sample-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; cursor: pointer; transition: border-color 0.15s;
+  }
+  .sample-card:hover { border-color: var(--accent); }
+  .sample-card h3 { font-size: 14px; margin-bottom: 8px; }
+  .sample-card .meta { font-size: 12px; color: var(--text-dim); }
+  .status-badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 10px; font-weight: 600; text-transform: uppercase;
+  }
+  .status-pending { background: var(--surface2); color: var(--text-dim); }
+  .status-in_review { background: rgba(108,140,255,0.2); color: var(--accent); }
+  .status-approved { background: rgba(74,222,128,0.2); color: var(--green); }
+  .status-rejected { background: rgba(248,113,113,0.2); color: var(--red); }
+  .status-needs_revision { background: rgba(251,146,60,0.2); color: var(--orange); }
+
+  /* Review panel */
+  #review-panel { display: none; }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  }
+  .panel-header h2 { font-size: 20px; }
+  .btn {
+    padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); cursor: pointer;
+    font-size: 13px; font-weight: 500; transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-approve { background: var(--green); border-color: var(--green); color: #111; }
+  .btn-reject { background: var(--red); border-color: var(--red); color: white; }
+  .btn-flag { background: var(--orange); border-color: var(--orange); color: #111; }
+  .btn-group { display: flex; gap: 8px; }
+  .back-link { color: var(--accent); cursor: pointer; font-size: 13px; text-decoration: underline; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 10px 20px; cursor: pointer; font-size: 14px; color: var(--text-dim);
+    border-bottom: 2px solid transparent; transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Reviewer info */
+  .reviewer-bar {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  }
+  .reviewer-bar label { font-size: 13px; color: var(--text-dim); }
+  .reviewer-bar input, .reviewer-bar textarea {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    padding: 6px 12px; border-radius: var(--radius); font-size: 13px;
+  }
+  .reviewer-bar input:focus, .reviewer-bar textarea:focus { outline: none; border-color: var(--accent); }
+
+  /* Frame review */
+  .frame-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 20px; overflow: hidden;
+  }
+  .frame-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+  .frame-header h4 { font-size: 14px; }
+  .frame-body { padding: 16px; }
+  .frame-image {
+    max-width: 100%; max-height: 400px; border-radius: var(--radius);
+    margin-bottom: 12px; background: var(--surface2);
+  }
+  .object-list { margin-top: 12px; }
+  .object-item {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px; margin-bottom: 8px;
+  }
+  .object-item .label { font-weight: 600; color: var(--accent); }
+  .object-field { display: flex; gap: 8px; align-items: center; margin-top: 4px; font-size: 13px; }
+  .object-field label { color: var(--text-dim); min-width: 80px; }
+  .object-field input, .object-field select {
+    flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 4px 8px; border-radius: 4px; font-size: 13px;
+  }
+  .scene-desc {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px; margin-top: 12px; font-size: 13px;
+  }
+  .scene-desc textarea {
+    width: 100%; background: transparent; border: none; color: var(--text);
+    font-size: 13px; resize: vertical; min-height: 60px; font-family: inherit;
+  }
+  .scene-desc textarea:focus { outline: none; }
+
+  /* QA review */
+  .qa-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    margin-bottom: 16px; overflow: hidden;
+  }
+  .qa-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+  .qa-body { padding: 16px; }
+  .qa-field { margin-bottom: 12px; }
+  .qa-field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+  .qa-field input, .qa-field textarea, .qa-field select {
+    width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 12px; border-radius: var(--radius); font-size: 13px; font-family: inherit;
+  }
+  .qa-field textarea { resize: vertical; min-height: 60px; }
+  .qa-field input:focus, .qa-field textarea:focus, .qa-field select:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .qa-dims { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .dim-tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px;
+    background: var(--surface2); border: 1px solid var(--border); cursor: pointer;
+  }
+  .dim-tag.selected { background: rgba(108,140,255,0.2); border-color: var(--accent); color: var(--accent); }
+  .qa-review-note { margin-top: 8px; }
+  .qa-review-note textarea {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 10px; border-radius: var(--radius);
+    font-size: 12px; resize: vertical; min-height: 36px; font-family: inherit;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex; gap: 24px; padding: 16px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 24px;
+    font-size: 13px;
+  }
+  .stat { text-align: center; }
+  .stat .num { font-size: 24px; font-weight: 700; color: var(--accent); }
+  .stat .lbl { color: var(--text-dim); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; background: var(--green); color: #111;
+    padding: 12px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 600;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+
+  /* Add QA button */
+  .add-qa-btn {
+    width: 100%; padding: 12px; border: 2px dashed var(--border); border-radius: var(--radius);
+    background: transparent; color: var(--text-dim); cursor: pointer; font-size: 14px;
+    transition: all 0.15s;
+  }
+  .add-qa-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  @media (max-width: 768px) {
+    .container { padding: 12px; }
+    .reviewer-bar { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Spatial-Temporal Memory Bench</h1>
+  <span class="badge">Annotation Review</span>
+</header>
+
+<div class="container">
+  <!-- Sample list view -->
+  <div id="sample-list-view">
+    <h2 style="margin-bottom: 16px;">Samples for Review</h2>
+    <div class="sample-list" id="sample-list"></div>
+  </div>
+
+  <!-- Review panel -->
+  <div id="review-panel">
+    <div class="panel-header">
+      <div>
+        <span class="back-link" onclick="showList()">&larr; Back to list</span>
+        <h2 id="sample-title"></h2>
+      </div>
+      <div class="btn-group">
+        <button class="btn" onclick="saveSample()">Save Changes</button>
+        <button class="btn btn-approve" onclick="setOverallStatus('approved')">Approve</button>
+        <button class="btn btn-flag" onclick="setOverallStatus('needs_revision')">Needs Revision</button>
+        <button class="btn btn-reject" onclick="setOverallStatus('rejected')">Reject</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar" id="stats-bar"></div>
+
+    <!-- Reviewer info -->
+    <div class="reviewer-bar">
+      <div>
+        <label>Reviewer:</label>
+        <input type="text" id="reviewer-name" placeholder="Your name" style="margin-left: 8px;">
+      </div>
+      <div style="flex: 1;">
+        <label>Overall Notes:</label>
+        <input type="text" id="review-notes" placeholder="General review comments..." style="width: 100%; margin-left: 8px;">
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('frames')">Frames & Objects</div>
+      <div class="tab" onclick="switchTab('qa')">QA Pairs</div>
+      <div class="tab" onclick="switchTab('json')">Raw JSON</div>
+    </div>
+
+    <div id="tab-frames" class="tab-content active"></div>
+    <div id="tab-qa" class="tab-content"></div>
+    <div id="tab-json" class="tab-content">
+      <textarea id="json-editor" style="width:100%; min-height:500px; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:var(--radius); padding:16px; font-family:monospace; font-size:13px;"></textarea>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ALL_DIMS = [
+  "spatial_recall", "temporal_tracking", "entity_resolution",
+  "cross_modal_fusion", "hot_memory", "cold_memory", "contextual_retrieval"
+];
+let currentSample = null;
+let currentSampleId = null;
+
+// --- Navigation ---
+async function loadSampleList() {
+  const res = await fetch("/api/samples");
+  const samples = await res.json();
+  const el = document.getElementById("sample-list");
+  el.innerHTML = samples.map(s => `
+    <div class="sample-card" onclick="openSample('${s.id}')">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3>${s.id}</h3>
+        <span class="status-badge status-${s.status}">${s.status.replace("_"," ")}</span>
+      </div>
+      <div class="meta" style="margin-top:8px;">
+        Environment: ${s.environment} &nbsp;|&nbsp; Frames: ${s.num_frames} &nbsp;|&nbsp; QA: ${s.num_qa}
+        ${s.reviewer ? " &nbsp;|&nbsp; Reviewer: " + s.reviewer : ""}
+      </div>
+    </div>
+  `).join("");
+}
+
+function showList() {
+  document.getElementById("sample-list-view").style.display = "block";
+  document.getElementById("review-panel").style.display = "none";
+  loadSampleList();
+}
+
+async function openSample(id) {
+  const res = await fetch(`/api/sample/${id}`);
+  currentSample = await res.json();
+  currentSampleId = id;
+  // Mark as in_review if pending
+  if (!currentSample.review) currentSample.review = {};
+  if (currentSample.review.status === "pending") {
+    currentSample.review.status = "in_review";
+  }
+  document.getElementById("sample-list-view").style.display = "none";
+  document.getElementById("review-panel").style.display = "block";
+  renderSample();
+}
+
+function switchTab(name) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+  event.target.classList.add("active");
+  document.getElementById("tab-" + name).classList.add("active");
+  if (name === "json") {
+    const clean = {...currentSample};
+    delete clean._source_path;
+    document.getElementById("json-editor").value = JSON.stringify(clean, null, 2);
+  }
+}
+
+// --- Render ---
+function renderSample() {
+  const s = currentSample;
+  document.getElementById("sample-title").textContent = `${currentSampleId} — ${s.visual_sequence.environment}`;
+  document.getElementById("reviewer-name").value = s.review.reviewer || "";
+  document.getElementById("review-notes").value = s.review.notes || "";
+  renderStats();
+  renderFrames();
+  renderQA();
+}
+
+function renderStats() {
+  const s = currentSample;
+  const frames = s.visual_sequence.frames;
+  const totalObjs = new Set();
+  frames.forEach(f => (f.objects || []).forEach(o => totalObjs.add(o.object_id)));
+  const framesReviewed = Object.keys(s.review.frame_reviews || {}).length;
+  const qaReviewed = Object.keys(s.review.qa_reviews || {}).length;
+  const totalQa = s.qa_pairs.length;
+
+  document.getElementById("stats-bar").innerHTML = `
+    <div class="stat"><div class="num">${frames.length}</div><div class="lbl">Frames</div></div>
+    <div class="stat"><div class="num">${totalObjs.size}</div><div class="lbl">Objects</div></div>
+    <div class="stat"><div class="num">${totalQa}</div><div class="lbl">QA Pairs</div></div>
+    <div class="stat"><div class="num">${framesReviewed}/${frames.length}</div><div class="lbl">Frames Reviewed</div></div>
+    <div class="stat"><div class="num">${qaReviewed}/${totalQa}</div><div class="lbl">QA Reviewed</div></div>
+    <div class="stat">
+      <div class="num"><span class="status-badge status-${s.review.status}">${(s.review.status||"pending").replace("_"," ")}</span></div>
+      <div class="lbl">Status</div>
+    </div>
+  `;
+}
+
+function renderFrames() {
+  const frames = currentSample.visual_sequence.frames;
+  const reviews = currentSample.review.frame_reviews || {};
+  const el = document.getElementById("tab-frames");
+
+  el.innerHTML = frames.map((f, fi) => {
+    const fr = reviews[f.frame_id] || {};
+    const objects = (f.objects || []).map((obj, oi) => `
+      <div class="object-item">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span class="label">${obj.label}</span>
+          <span style="font-size:11px; color:var(--text-dim);">ID: ${obj.object_id}</span>
+        </div>
+        <div class="object-field">
+          <label>Label:</label>
+          <input value="${obj.label}" onchange="updateObject(${fi},${oi},'label',this.value)">
+        </div>
+        <div class="object-field">
+          <label>State:</label>
+          <input value="${obj.state || ''}" onchange="updateObject(${fi},${oi},'state',this.value)">
+        </div>
+        <div class="object-field">
+          <label>Position:</label>
+          <input value="${obj.spatial_description || ''}" onchange="updateObject(${fi},${oi},'spatial_description',this.value)">
+        </div>
+        ${obj.bounding_box ? `
+        <div class="object-field">
+          <label>BBox:</label>
+          <span style="font-size:12px; color:var(--text-dim);">
+            x:[${obj.bounding_box.x_min.toFixed(2)}-${obj.bounding_box.x_max.toFixed(2)}]
+            y:[${obj.bounding_box.y_min.toFixed(2)}-${obj.bounding_box.y_max.toFixed(2)}]
+          </span>
+        </div>` : ''}
+      </div>
+    `).join("");
+
+    return `
+      <div class="frame-card">
+        <div class="frame-header">
+          <h4>${f.frame_id} &nbsp; <span style="font-size:12px; color:var(--text-dim);">${f.timestamp}</span></h4>
+          <div class="btn-group">
+            <button class="btn btn-approve" style="padding:4px 10px; font-size:12px;" onclick="reviewFrame('${f.frame_id}','approved')">Approve</button>
+            <button class="btn btn-flag" style="padding:4px 10px; font-size:12px;" onclick="reviewFrame('${f.frame_id}','flagged')">Flag</button>
+            ${fr.status ? `<span class="status-badge status-${fr.status === 'approved' ? 'approved' : 'needs_revision'}" style="margin-left:8px;">${fr.status}</span>` : ''}
+          </div>
+        </div>
+        <div class="frame-body">
+          <img class="frame-image" src="/images/${f.image_path}" alt="${f.frame_id}"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div style="display:none; background:var(--surface2); padding:24px; text-align:center; border-radius:var(--radius); color:var(--text-dim);">
+            Image not available: ${f.image_path}
+          </div>
+          <div class="object-list">
+            <h5 style="font-size:13px; color:var(--text-dim); margin-bottom:8px;">Objects (${(f.objects||[]).length})</h5>
+            ${objects || '<div style="color:var(--text-dim); font-size:13px;">No objects detected</div>'}
+          </div>
+          <div class="scene-desc">
+            <h5 style="font-size:12px; color:var(--text-dim); margin-bottom:4px;">Scene Description</h5>
+            <textarea onchange="updateSceneDesc(${fi}, this.value)">${f.scene_description || ''}</textarea>
+          </div>
+          <div class="qa-review-note" style="margin-top:8px;">
+            <textarea placeholder="Frame review notes..." onchange="setFrameNote('${f.frame_id}', this.value)">${fr.notes || ''}</textarea>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderQA() {
+  const qaPairs = currentSample.qa_pairs;
+  const reviews = currentSample.review.qa_reviews || {};
+  const el = document.getElementById("tab-qa");
+
+  const cards = qaPairs.map((qa, qi) => {
+    const qr = reviews[qa.question_id] || {};
+    const dims = ALL_DIMS.map(d => {
+      const sel = (qa.dimensions || []).includes(d);
+      return `<span class="dim-tag ${sel ? 'selected' : ''}" onclick="toggleDim(${qi},'${d}')">${d.replace(/_/g,' ')}</span>`;
+    }).join("");
+
+    return `
+      <div class="qa-card">
+        <div class="qa-header">
+          <h4>${qa.question_id}
+            <span class="status-badge status-${qa.difficulty === 'hard' ? 'needs_revision' : qa.difficulty === 'easy' ? 'approved' : 'in_review'}" style="margin-left:8px;">${qa.difficulty || 'medium'}</span>
+          </h4>
+          <div class="btn-group">
+            <button class="btn btn-approve" style="padding:4px 10px; font-size:12px;" onclick="reviewQA('${qa.question_id}','approved')">Approve</button>
+            <button class="btn btn-flag" style="padding:4px 10px; font-size:12px;" onclick="reviewQA('${qa.question_id}','flagged')">Flag</button>
+            <button class="btn btn-reject" style="padding:4px 10px; font-size:12px;" onclick="reviewQA('${qa.question_id}','rejected')">Reject</button>
+            <button class="btn" style="padding:4px 10px; font-size:12px; color:var(--red);" onclick="deleteQA(${qi})">Delete</button>
+            ${qr.status ? `<span class="status-badge status-${qr.status === 'approved' ? 'approved' : qr.status === 'rejected' ? 'rejected' : 'needs_revision'}" style="margin-left:8px;">${qr.status}</span>` : ''}
+          </div>
+        </div>
+        <div class="qa-body">
+          <div class="qa-field">
+            <label>Question</label>
+            <textarea onchange="updateQA(${qi},'question',this.value)">${qa.question}</textarea>
+          </div>
+          <div class="qa-field">
+            <label>Ground Truth Answer</label>
+            <textarea onchange="updateQA(${qi},'answer',this.value)">${qa.answer}</textarea>
+          </div>
+          <div style="display:flex; gap:16px;">
+            <div class="qa-field" style="flex:1;">
+              <label>Answer Type</label>
+              <select onchange="updateQA(${qi},'answer_type',this.value)">
+                <option value="exact" ${qa.answer_type==='exact'?'selected':''}>Exact</option>
+                <option value="fuzzy" ${qa.answer_type==='fuzzy'?'selected':''}>Fuzzy</option>
+                <option value="multiple_choice" ${qa.answer_type==='multiple_choice'?'selected':''}>Multiple Choice</option>
+                <option value="open_ended" ${qa.answer_type==='open_ended'?'selected':''}>Open Ended</option>
+              </select>
+            </div>
+            <div class="qa-field" style="flex:1;">
+              <label>Difficulty</label>
+              <select onchange="updateQA(${qi},'difficulty',this.value)">
+                <option value="easy" ${qa.difficulty==='easy'?'selected':''}>Easy</option>
+                <option value="medium" ${qa.difficulty==='medium'?'selected':''}>Medium</option>
+                <option value="hard" ${qa.difficulty==='hard'?'selected':''}>Hard</option>
+              </select>
+            </div>
+            <div class="qa-field" style="flex:1;">
+              <label>Relevant Frames</label>
+              <input value="${(qa.relevant_frames||[]).join(', ')}" onchange="updateQAFrames(${qi},this.value)">
+            </div>
+          </div>
+          <div class="qa-field">
+            <label>Dimensions</label>
+            <div class="qa-dims">${dims}</div>
+          </div>
+          <div class="qa-review-note">
+            <textarea placeholder="Review notes for this QA pair..." onchange="setQANote('${qa.question_id}', this.value)">${qr.notes || ''}</textarea>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  el.innerHTML = cards + `<button class="add-qa-btn" onclick="addQA()">+ Add QA Pair</button>`;
+}
+
+// --- Data updates ---
+function updateObject(fi, oi, field, value) {
+  currentSample.visual_sequence.frames[fi].objects[oi][field] = value;
+  // Mark frame as edited
+  const fid = currentSample.visual_sequence.frames[fi].frame_id;
+  if (!currentSample.review.frame_reviews) currentSample.review.frame_reviews = {};
+  const fr = currentSample.review.frame_reviews[fid] || {};
+  fr.status = "edited";
+  currentSample.review.frame_reviews[fid] = fr;
+}
+
+function updateSceneDesc(fi, value) {
+  currentSample.visual_sequence.frames[fi].scene_description = value;
+}
+
+function updateQA(qi, field, value) {
+  currentSample.qa_pairs[qi][field] = value;
+  const qid = currentSample.qa_pairs[qi].question_id;
+  if (!currentSample.review.qa_reviews) currentSample.review.qa_reviews = {};
+  const qr = currentSample.review.qa_reviews[qid] || {};
+  qr.status = "edited";
+  currentSample.review.qa_reviews[qid] = qr;
+}
+
+function updateQAFrames(qi, value) {
+  currentSample.qa_pairs[qi].relevant_frames = value.split(",").map(s => s.trim()).filter(Boolean);
+}
+
+function toggleDim(qi, dim) {
+  const dims = currentSample.qa_pairs[qi].dimensions || [];
+  const idx = dims.indexOf(dim);
+  if (idx >= 0) dims.splice(idx, 1);
+  else dims.push(dim);
+  currentSample.qa_pairs[qi].dimensions = dims;
+  renderQA();
+}
+
+function deleteQA(qi) {
+  if (confirm("Delete this QA pair?")) {
+    currentSample.qa_pairs.splice(qi, 1);
+    renderQA();
+    renderStats();
+  }
+}
+
+function addQA() {
+  const nextId = `q${String(currentSample.qa_pairs.length + 1).padStart(3, "0")}`;
+  currentSample.qa_pairs.push({
+    question_id: nextId,
+    question: "",
+    answer: "",
+    answer_type: "fuzzy",
+    dimensions: ["spatial_recall"],
+    difficulty: "medium",
+    relevant_frames: [],
+  });
+  renderQA();
+  renderStats();
+}
+
+// --- Review actions ---
+function reviewFrame(frameId, status) {
+  if (!currentSample.review.frame_reviews) currentSample.review.frame_reviews = {};
+  const existing = currentSample.review.frame_reviews[frameId] || {};
+  existing.status = status;
+  currentSample.review.frame_reviews[frameId] = existing;
+  renderFrames();
+  renderStats();
+  toast(`Frame ${frameId}: ${status}`);
+}
+
+function setFrameNote(frameId, note) {
+  if (!currentSample.review.frame_reviews) currentSample.review.frame_reviews = {};
+  const existing = currentSample.review.frame_reviews[frameId] || {};
+  existing.notes = note;
+  currentSample.review.frame_reviews[frameId] = existing;
+}
+
+function reviewQA(qid, status) {
+  if (!currentSample.review.qa_reviews) currentSample.review.qa_reviews = {};
+  const existing = currentSample.review.qa_reviews[qid] || {};
+  existing.status = status;
+  currentSample.review.qa_reviews[qid] = existing;
+  renderQA();
+  renderStats();
+  toast(`QA ${qid}: ${status}`);
+}
+
+function setQANote(qid, note) {
+  if (!currentSample.review.qa_reviews) currentSample.review.qa_reviews = {};
+  const existing = currentSample.review.qa_reviews[qid] || {};
+  existing.notes = note;
+  currentSample.review.qa_reviews[qid] = existing;
+}
+
+async function setOverallStatus(status) {
+  currentSample.review.status = status;
+  currentSample.review.reviewer = document.getElementById("reviewer-name").value;
+  currentSample.review.notes = document.getElementById("review-notes").value;
+  await saveSample();
+  renderStats();
+  toast(`Sample ${status.replace("_", " ")}`);
+}
+
+async function saveSample() {
+  currentSample.review.reviewer = document.getElementById("reviewer-name").value;
+  currentSample.review.notes = document.getElementById("review-notes").value;
+  const res = await fetch(`/api/sample/${currentSampleId}/save`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(currentSample),
+  });
+  const data = await res.json();
+  toast("Changes saved");
+}
+
+// --- Utility ---
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2000);
+}
+
+// Init
+loadSampleList();
+</script>
+</body>
+</html>
